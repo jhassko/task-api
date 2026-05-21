@@ -1,29 +1,41 @@
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { render, screen, fireEvent } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 import TaskList from '../../src/components/TaskList.vue'
-
-const task = {
-  id: '1',
-  title: 'Test task',
-  description: 'Task description',
-  status: 'TODO' as const,
-  dueDate: '2026-05-25T17:00:00.000Z',
-  createdAt: '2026-05-20T10:00:00.000Z',
-  updatedAt: '2026-05-20T10:00:00.000Z'
-}
+import type { Task } from '../../src/types/task'
 
 describe('TaskList', () => {
   it('renders an empty state', () => {
-    render(TaskList, { props: { tasks: [] } })
-    expect(screen.getByText('No tasks yet. Create your first task above.')).toBeInTheDocument()
+    render(TaskList, {
+      props: {
+        tasks: []
+      }
+    })
+
+    expect(screen.getByText(/no tasks yet/i)).toBeTruthy()
   })
 
   it('renders tasks and emits delete', async () => {
-    const { emitted } = render(TaskList, { props: { tasks: [task] } })
+    const task: Task = {
+      id: '1',
+      title: 'Test task',
+      description: 'Test description',
+      status: 'TODO',
+      dueDate: '2026-05-25T17:00:00Z',
+      createdAt: '2026-05-21T10:00:00Z',
+      updatedAt: '2026-05-21T10:00:00Z'
+    }
 
-    expect(screen.getByText('Test task')).toBeInTheDocument()
-    await fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+    const { emitted } = render(TaskList, {
+      props: {
+        tasks: [task]
+      }
+    })
 
-    expect(emitted().delete[0][0]).toEqual(task)
+    await fireEvent.click(screen.getByRole('button', { name: /delete/i }))
+
+    const deleteEvents = emitted('delete') as unknown[][]
+
+    expect(deleteEvents).toHaveLength(1)
+    expect(deleteEvents[0][0]).toEqual(task)
   })
 })

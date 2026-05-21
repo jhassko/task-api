@@ -10,7 +10,7 @@ A full-stack task management application with a Java Spring Boot backend and a V
 - Update a full task
 - Update only task status
 - Delete tasks
-- Database persistence with PostgreSQL
+- Database persistence with H2 for local development
 - Backend validation and global error handling
 - Frontend loading, empty, error, create, edit, status update, and delete states
 - Backend and frontend tests
@@ -24,9 +24,10 @@ A full-stack task management application with a Java Spring Boot backend and a V
 - Spring Web
 - Spring Data JPA
 - Jakarta Bean Validation
-- PostgreSQL
-- H2 for integration tests
-- JUnit 5, Mockito, MockMvc
+- H2 Database
+- JUnit 5
+- Mockito
+- MockMvc
 
 ### Frontend
 
@@ -42,29 +43,23 @@ A full-stack task management application with a Java Spring Boot backend and a V
 - Maven 3.9+
 - Node.js 20+
 - npm
-- Docker, for local PostgreSQL
 
-## Running the Database
+## Database
 
-From the project root:
+The application uses H2 for local development and evaluation.
 
-```bash
-docker compose up -d
-```
+No external database installation is required.
 
-This starts PostgreSQL on port `5432` with:
+To use PostgreSQL instead, update the datasource configuration in:
 
 ```txt
-Database: tasksdb
-Username: tasksuser
-Password: taskspassword
+backend/src/main/resources/application.properties
 ```
 
 ## Running the Backend
 
 ```bash
 cd backend
-cp .env.example .env
 mvn spring-boot:run
 ```
 
@@ -73,6 +68,22 @@ The backend runs at:
 ```txt
 http://localhost:8080
 ```
+
+The H2 console is available at:
+
+```txt
+http://localhost:8080/h2-console
+```
+
+Use the following connection details:
+
+```txt
+JDBC URL: jdbc:h2:mem:tasksdb
+Username: sa
+Password:
+```
+
+Leave the password blank.
 
 The default CORS origin is:
 
@@ -84,7 +95,6 @@ http://localhost:5173
 
 ```bash
 cd frontend
-cp .env.example .env
 npm install
 npm run dev
 ```
@@ -110,6 +120,13 @@ mvn test
 cd frontend
 npm install
 npm test
+```
+
+## Building the Frontend
+
+```bash
+cd frontend
+npm run build
 ```
 
 ## API Documentation
@@ -150,7 +167,7 @@ Notes:
 
 - `title` is required and must not be blank.
 - `description` is optional.
-- `status` is optional on create. If omitted, it defaults to `TODO`.
+- `status` is optional on create and defaults to `TODO`.
 - `dueDate` is required and must be a valid ISO datetime.
 
 Response: `201 Created`
@@ -199,7 +216,11 @@ Response: `200 OK`
 
 Returns a single task.
 
-If the task does not exist, response is `404 Not Found`.
+If the task does not exist:
+
+```txt
+404 Not Found
+```
 
 ### Update Task
 
@@ -219,7 +240,11 @@ Request body:
 }
 ```
 
-Response: `200 OK`
+Response:
+
+```txt
+200 OK
+```
 
 Returns the updated task.
 
@@ -238,7 +263,11 @@ Request body:
 }
 ```
 
-Response: `200 OK`
+Response:
+
+```txt
+200 OK
+```
 
 Returns the updated task.
 
@@ -248,13 +277,21 @@ Returns the updated task.
 DELETE /tasks/{id}
 ```
 
-Response: `204 No Content`
+Response:
 
-If the task does not exist, response is `404 Not Found`.
+```txt
+204 No Content
+```
+
+If the task does not exist:
+
+```txt
+404 Not Found
+```
 
 ## Error Response Format
 
-Validation error example:
+### Validation Error Example
 
 ```json
 {
@@ -268,7 +305,7 @@ Validation error example:
 }
 ```
 
-Not found example:
+### Not Found Example
 
 ```json
 {
@@ -283,10 +320,11 @@ Not found example:
 
 ### Backend
 
+No environment variables are required for the default H2 configuration.
+
+Optional:
+
 ```txt
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/tasksdb
-SPRING_DATASOURCE_USERNAME=tasksuser
-SPRING_DATASOURCE_PASSWORD=taskspassword
 APP_CORS_ALLOWED_ORIGINS=http://localhost:5173
 ```
 
@@ -296,5 +334,26 @@ APP_CORS_ALLOWED_ORIGINS=http://localhost:5173
 VITE_API_BASE_URL=http://localhost:8080/api
 ```
 
+## Project Structure
+
+```txt
+task-manager/
+├── backend/
+│   ├── src/
+│   ├── pom.xml
+│   └── application.properties
+├── frontend/
+│   ├── src/
+│   ├── tests/
+│   ├── package.json
+│   └── vite.config.ts
+└── README.md
+```
+
 ## Notes
-- Backend tests use H2 in PostgreSQL compatibility mode.
+
+- The application uses an in-memory H2 database for local development and evaluation.
+- Data is reset whenever the backend application restarts.
+- PostgreSQL can be enabled by updating the datasource configuration in `backend/src/main/resources/application.properties`.
+- Backend tests run against H2.
+- Frontend tests use Vitest and Vue Testing Library.
